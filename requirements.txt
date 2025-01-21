@@ -1,0 +1,3 @@
+pyrogram==2.0.106
+python-decouple==3.8
+pymongo==4.10.1
