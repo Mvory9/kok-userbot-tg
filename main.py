@@ -139,8 +139,8 @@ async def global_top_handler(client: Client, message: Message):
     top_text = "🌍 <b>Глобальный топ коков:</b>\n"
 
     for i, user in enumerate(top_users):
-        user_obj = await client.get_users(user["userId"])
-        top_text += f"<b>{i + 1}.</b> {user_obj.first_name} - <b>{user['len']}</b> см\n"
+        # Removed getting user info. Just use the user ID
+        top_text += f"<b>{i + 1}.</b> ID: <code>{user['userId']}</code> - <b>{user['len']}</b> см\n"
 
     user_rank = get_global_user_rank(message.from_user.id)
     if user_rank:
@@ -159,7 +159,7 @@ async def help_handler(client: Client, message: Message):
 
 🌍 /top_global (или /топ_глобальный) - Показывает глобальный топ коков и вашу позицию в нем.
 
-🆔 /id (или /айди) - Получить айди. Выводит Ваш айти в телеграмме.
+🆔 /id (или /айди) - Получить айди. Показывает Ваш айди в телеграмме.
 
 ❓ /help (или /помощь) - Показывает это сообщение со списком команд.
 """
