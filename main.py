@@ -46,12 +46,13 @@ def update_user(user_id, new_len):
 
 
 def add_chat_to_user(user_id, chat_id):
-    user = get_user(user_id)
-    if "chats" not in user:
-        users.update_one({"userId": user_id}, {"$set": {"chats": [chat_id]}})
-    elif chat_id not in user["chats"]:
-        user["chats"].append(chat_id)
-        users.update_one({"userId": user_id}, {"$set": {"chats": user["chats"]}})
+    if chat_id < 0:
+        user = get_user(user_id)
+        if "chats" not in user:
+            users.update_one({"userId": user_id}, {"$set": {"chats": [chat_id]}})
+        elif chat_id not in user["chats"]:
+            user["chats"].append(chat_id)
+            users.update_one({"userId": user_id}, {"$set": {"chats": user["chats"]}})
 
 
 def get_top_users(chat_id, limit=50):
