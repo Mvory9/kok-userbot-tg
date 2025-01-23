@@ -113,6 +113,10 @@ async def command_handler(client: Client, message: Message):
 @bot.on_message(filters.command(["top", "топ"]))
 async def top_handler(client: Client, message: Message):
     chat_id = message.chat.id
+    if chat_id > 0:
+        await message.reply(f"👥 В личных сообщениях нельзя играть в кок. Используйте эту команду в групповом чате.")
+        return
+    
     top_users = get_top_users(chat_id)
 
     if not top_users:
