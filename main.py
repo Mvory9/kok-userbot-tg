@@ -34,6 +34,7 @@ def register_user(user_id):
         "userId": user_id,
         "lastPlayDate": "1970-01-01",
         "len": 0,
+        "chats": []
     }
     users.insert_one(post)
 
@@ -102,12 +103,28 @@ async def command_handler(client: Client, message: Message):
     if user["lastPlayDate"] == get_today_date():
         await message.reply(f"⏰ Ты уже играл сегодня. Твой кок: <b>{user['len']}</b> см")
     else:
-        add_len = random.randint(1, 10)
-        new_len = user["len"] + add_len
+        current_len = user["len"]
+        change = 0 
+        
+        if current_len > 50:
+            if random.random() < 0.33:  # 33% шанс уменьшения
+                change = -random.randint(1, 5)
+            else: # 67% шанс увеличения
+                change = random.randint(1, 10)
+        else: 
+            change = random.randint(1, 10)
+
+        new_len = current_len + change
         update_user(user_id, new_len)
-        await message.reply(
-            f"🍆 Твой кок вырос на <b>{add_len}</b> см и теперь составляет <b>{new_len}</b> см."
-        )
+        
+        if change > 0:
+            await message.reply(
+                f"🍆 Твой кок вырос на <b>{change}</b> см и теперь составляет <b>{new_len}</b> см."
+            )
+        elif change < 0:
+            await message.reply(
+                f"🍆 Твой кок уменьшился на <b>{abs(change)}</b> см и теперь составляет <b>{new_len}</b> см."
+            )
 
 
 @bot.on_message(filters.command(["top", "топ"]))
