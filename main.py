@@ -171,7 +171,7 @@ async def global_top_handler(client: Client, message: Message):
 
 @bot.on_message(filters.command(["help", "помощь"]))
 async def help_handler(client: Client, message: Message):
-    help_text = """
+    help_text = f"""
 <b>Список доступных команд:</b>
 
 🍆 /kok (или /кок) - Играть в кок. Увеличивает длину вашего кока на случайное число. Можно играть один раз в день.
@@ -183,8 +183,11 @@ async def help_handler(client: Client, message: Message):
 🆔 /id (или /айди) - Получить айди. Показывает Ваш айди в телеграмме.
 
 ❓ /help (или /помощь) - Показывает это сообщение со списком команд.
+
+<a href="https://github.com/Mvory9/kok-userbot-tg/">Репозиторий на GitHub</a>
+<a href="https://github.com/Mvory9/kok-userbot-tg/issues">Сообщить о баге или предложить идею</a>
 """
-    await message.reply(help_text)
+    await message.reply(help_text, disable_web_page_preview=True)
 
 
 bot.run()
