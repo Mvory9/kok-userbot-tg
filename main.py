@@ -184,7 +184,8 @@ async def help_handler(client: Client, message: Message):
 
 ❓ /help (или /помощь) - Показывает это сообщение со списком команд.
 
-<a href="https://github.com/Mvory9/kok-userbot-tg/">Репозиторий на GitHub</a>
+<a href="https://mvory9.github.io/kok-userbot-tg/">Полная документация на GitHub Pages</a>
+<a href="https://github.com/Mvory9/kok-userbot-tg/">Репозиторий на GitHub (+ исходный код)</a>
 <a href="https://github.com/Mvory9/kok-userbot-tg/issues">Сообщить о баге или предложить идею</a>
 """
     await message.reply(help_text, disable_web_page_preview=True)
