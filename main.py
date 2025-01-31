@@ -136,7 +136,7 @@ async def command_handler(client: Client, message: Message):
     new_len = current_len + change
     update_user(user_id, new_len)
     
-    if not fimosis_active and random.random() < 0.05:
+    if not fimosis_active and current_len > 50 and random.random() < 0.05:
         fimosis_data = {
             "start": get_today_date(),
             "duration": 3
