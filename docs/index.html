@@ -41,7 +41,6 @@
             padding: 2rem 1.5rem;
         }
 
-        /* Header */
         .hero {
             text-align: center;
             margin-bottom: 4rem;
@@ -74,7 +73,6 @@
             margin: 0 auto;
         }
 
-        /* Command Grid */
         .command-grid {
             display: grid;
             gap: 2rem;
@@ -148,7 +146,6 @@
             background: rgba(99,102,241,0.1);
         }
 
-        /* Accordion */
         .accordion {
             background: var(--light);
             border-radius: 1rem;
@@ -181,7 +178,6 @@
             padding: 0 1.5rem;
         }
 
-        /* Theme Toggle */
         .theme-toggle {
             position: fixed;
             bottom: 2rem;
@@ -200,7 +196,6 @@
             transition: var(--transition);
         }
 
-        /* Responsive Design */
         @media (max-width: 768px) {
             .hero {
                 padding: 2rem 0;
@@ -214,6 +209,9 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        .fa-fist-raised:before { content: "\f6de"; }
+        .fa-user:before { content: "\f007"; }
     </style>
 </head>
 <body>
@@ -224,7 +222,6 @@
         </section>
 
         <div class="command-grid">
-            <!-- Команда /kok -->
             <div class="command-card">
                 <div class="command-header">
                     <div class="command-icon"><i class="fas fa-magic"></i></div>
@@ -242,11 +239,12 @@
                         <li>📅 1 использование в 24 часа</li>
                         <li>📏 Случайное изменение от 1 до 10 см</li>
                         <li>⚖️ Вероятность уменьшения при длине >50 см</li>
+                        <li>⚠️ Риск фимоза (5% шанс)</li>
+                        <li>🔻 Особые условия при фимозе</li>
                     </ul>
                 </div>
             </div>
 
-            <!-- Команда /top -->
             <div class="command-card">
                 <div class="command-header">
                     <div class="command-icon"><i class="fas fa-trophy"></i></div>
@@ -268,7 +266,6 @@
                 </div>
             </div>
 
-            <!-- Команда /top_global -->
             <div class="command-card">
                 <div class="command-header">
                     <div class="command-icon"><i class="fas fa-globe"></i></div>
@@ -290,7 +287,6 @@
                 </div>
             </div>
 
-            <!-- Команда /id -->
             <div class="command-card">
                 <div class="command-header">
                     <div class="command-icon"><i class="fas fa-id-card"></i></div>
@@ -312,7 +308,6 @@
                 </div>
             </div>
 
-            <!-- Команда /help -->
             <div class="command-card">
                 <div class="command-header">
                     <div class="command-icon"><i class="fas fa-question-circle"></i></div>
@@ -333,9 +328,51 @@
                     </ul>
                 </div>
             </div>
+
+            <div class="command-card">
+                <div class="command-header">
+                    <div class="command-icon"><i class="fas fa-fist-raised"></i></div>
+                    <h3 class="command-title">Дуэль</h3>
+                </div>
+                <div class="command-code">
+                    <span>/duel @username</span>
+                    <button class="copy-btn" onclick="copyCommand('/duel')">
+                        <i class="far fa-copy"></i>
+                    </button>
+                </div>
+                <div class="command-details">
+                    <p>Вызов участника на дуэль:</p>
+                    <ul>
+                        <li>⚔️ Ставка: +15см/-10см</li>
+                        <li>🎯 Способы вызова: ответ/юзернейм/ID</li>
+                        <li>🕒 Оба участника должны играть сегодня</li>
+                        <li>🚫 Запрещено при фимозе</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="command-card">
+                <div class="command-header">
+                    <div class="command-icon"><i class="fas fa-user"></i></div>
+                    <h3 class="command-title">Профиль</h3>
+                </div>
+                <div class="command-code">
+                    <span>/profile</span>
+                    <button class="copy-btn" onclick="copyCommand('/profile')">
+                        <i class="far fa-copy"></i>
+                    </button>
+                </div>
+                <div class="command-details">
+                    <p>Персональная статистика:</p>
+                    <ul>
+                        <li>📊 Текущая длина и шансы</li>
+                        <li>⚠️ Статус фимоза</li>
+                        <li>📅 Дата последней игры</li>
+                    </ul>
+                </div>
+            </div>
         </div>
 
-        <!-- Технические детали -->
         <div class="accordion">
             <div class="accordion-item">
                 <div class="accordion-header" onclick="toggleAccordion(this)">
@@ -349,10 +386,39 @@
                         <ul>
                             <li>📈 +1-10 см при длине ≤50 см</li>
                             <li>📉 33% шанс уменьшения на 1-5 см при длине >50 см</li>
+                            <li>🎲 Вероятность фимоза: 5%</li>
+                            <li>⚔️ Дуэльная система: +15/-10 см</li>
+                            <li>📉 Новые параметры при фимозе</li>
                         </ul>
                         <p><strong>Временная зона:</strong> Москва (UTC+3)</p>
                         <p><strong>API:</strong> Pyrogram</p>
                         <p><strong>Исходный код:</strong> <a href="https://github.com/Mvory9/kok-userbot-tg" target="_blank">GitHub</a></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <h3>⚠️ Система фимоза</h3>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="accordion-content">
+                    <div class="tech-details">
+                        <p><strong>Механика работы:</strong></p>
+                        <ul>
+                            <li>🎲 5% шанс получить при использовании /kok</li>
+                            <li>⏳ Длительность: 3 дня</li>
+                            <li>🚫 Ограничения во время фимоза:</li>
+                        </ul>
+                        <div style="margin-left: 1.5rem;">
+                            <p>▸ Запрещены дуэли<br>
+                            ▸ Макс. рост в день: 5 см<br>
+                            ▸ Шанс уменьшения: 50% вместо 33%</p>
+                        </div>
+                        <p><strong>Визуальные индикаторы:</strong><br>
+                        ▸ Специальное уведомление в /kok<br>
+                        ▸ Отображение в /profile<br>
+                        ▸ Автоматическое снятие через 72 часа</p>
                     </div>
                 </div>
             </div>
@@ -365,7 +431,9 @@
 
     <script>
         function copyCommand(command) {
-            navigator.clipboard.writeText(command)
+            let finalCommand = command;
+            if(command === '/duel') finalCommand = '/duel @username';
+            navigator.clipboard.writeText(finalCommand)
                 .then(() => {
                     const btn = event.currentTarget;
                     btn.innerHTML = '<i class="fas fa-check"></i>';
