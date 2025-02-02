@@ -1,3 +1,4 @@
+import json
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from decouple import config
@@ -34,14 +35,30 @@ def get_user(user_id):
 
 
 def register_user(user_id):
-    post = {
-        "userId": user_id,
-        "lastPlayDate": "1970-01-01",
-        "len": 0,
-        "chats": [],
-        "fimos_end": "1970-01-01",
-        "lastDuelDate": "1970-01-01",
-    }
+    find_user_len_in_oldBase = find_user_by_id(user_id)
+
+    post = {}
+
+    if find_user_len_in_oldBase:
+        post = {
+            "userId": user_id,
+            "lastPlayDate": "1970-01-01",
+            "len": find_user_len_in_oldBase,
+            "chats": [],
+            "fimos_end": "1970-01-01",
+            "lastDuelDate": "1970-01-01",
+        }
+
+    else:
+        post = {
+            "userId": user_id,
+            "lastPlayDate": "1970-01-01",
+            "len": 0,
+            "chats": [],
+            "fimos_end": "1970-01-01",
+            "lastDuelDate": "1970-01-01",
+        }
+
     users.insert_one(post)
 
 
@@ -433,6 +450,25 @@ async def profile_handler(client: Client, message: Message):
 
     await message.reply(f"📊 <b>Ваш профиль:</b>\n\n" f"📏 Длина вашего кока: <b>{user['len']}</b> см\n" f"📅 Дата последней игры: <b>{user['lastPlayDate']}</b>\n" f"⚔️ Дата последней дуэли: <b>{user['lastDuelDate']}</b>{fimos_message}")
 
+
+def find_user_by_id(target_user_id):
+    with open("kok.users.json", 'r', encoding='utf-8') as file:
+        data = json.load(file)
+    
+    for user in data:
+        user_id = user['userId']
+        if isinstance(user_id, dict) and '$numberLong' in user_id:
+            user_id = int(user_id['$numberLong'])
+        elif isinstance(user_id, int):
+            pass  # Уже число, ничего не делаем
+        else:
+            continue  # Пропускаем некорректные данные
+        
+        if user_id == target_user_id:
+            return user['len']
+    
+    return False
+    
 
 async def main():
     while True:
