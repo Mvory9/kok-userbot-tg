@@ -1,3 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Документация Kok Bot</title>
+	<style>
+	body {
+		font-family: Arial, sans-serif;
+		line-height: 1.6;
+		margin: 20px;
+		background-color: #f9f9f9;
+	}
+	
+	h1,
+	h2,
+	h3 {
+		color: #333;
+	}
+	
+	pre {
+		background: #eee;
+		padding: 10px;
+		border: 1px solid #ccc;
+		overflow-x: auto;
+	}
+	
+	code {
+		background: #eee;
+		padding: 2px 4px;
+		border-radius: 4px;
+	}
+	
+	.section {
+		margin-bottom: 30px;
+	}
+	</style>
+</head>
+
+<body>
+	<h1>Документация Kok Bot</h1>
+	<div class="section">
+		<h2>1. Инициализация и настройка</h2>
+		<h3>Импорты и настройки</h3>
+		<p> Используемые библиотеки: </p>
+		<ul>
+			<li><strong>pyrogram</strong> – для создания Telegram-бота.</li>
+			<li><strong>decouple</strong> – для получения конфигурационных переменных (.env файл: LOGIN, API_ID, API_HASH, PHONE).</li>
+			<li><strong>datetime, timedelta, pytz</strong> – для работы с датами, временем и таймзонами (Москва).</li>
+			<li><strong>random</strong> – для генерации случайных изменений "длины".</li>
+			<li><strong>pymongo</strong> – для взаимодействия с MongoDB.</li>
+			<li><strong>asyncio</strong> – для асинхронного выполнения фоновых задач.</li>
+		</ul> <pre>
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from decouple import config
@@ -6,33 +59,44 @@ import pytz
 import random
 import pymongo
 import asyncio
-
+    </pre>
+		<h3>Инициализация бота</h3> <pre>
 bot = Client(
     name=config("LOGIN"),
     api_id=config("API_ID"),
     api_hash=config("API_HASH"),
     phone_number=config("PHONE"),
 )
-
+    </pre>
+		<h3>Подключение к базе данных</h3> <pre>
 connection_uri = config("MONGO_URL")
 client = pymongo.MongoClient(connection_uri)
 db = client.kokbot
 users = db.users
-
+    </pre> </div>
+	<div class="section">
+		<h2>2. Глобальные переменные</h2> <pre>
 DUEL_REQUESTS = {}
 DUEL_TIMEOUT = 300  # 5 минут (в секундах)
-
-
+    </pre>
+		<p> <strong>DUEL_REQUESTS</strong> – словарь для хранения активных запросов на дуэль. Ключ – составной идентификатор, значение – данные запроса.
+			<br> <strong>DUEL_TIMEOUT</strong> – время ожидания ответа (300 секунд). </p>
+	</div>
+	<div class="section">
+		<h2>3. Утилитарные функции</h2>
+		<h3>3.1. Получение сегодняшней даты</h3> <pre>
 def get_today_date():
     moscow_tz = pytz.timezone("Europe/Moscow")
     moscow_time = datetime.now(moscow_tz)
     return moscow_time.strftime("%Y-%m-%d")
-
-
+    </pre>
+		<p> Возвращает сегодняшнюю дату в формате <code>YYYY-MM-DD</code> с учётом московской таймзоны. </p>
+		<h3>3.2. Работа с пользователями в базе</h3>
+		<h4>Получение пользователя</h4> <pre>
 def get_user(user_id):
     return users.find_one({"userId": user_id})
-
-
+    </pre>
+		<h4>Регистрация пользователя</h4> <pre>
 def register_user(user_id):
     post = {
         "userId": user_id,
@@ -43,8 +107,8 @@ def register_user(user_id):
         "lastDuelDate": "1970-01-01",
     }
     users.insert_one(post)
-
-
+    </pre>
+		<h4>Обновление пользователя</h4> <pre>
 def update_user(user_id, new_len, fimos_end=None, last_duel_date=None):
     update_data = {"$set": {"lastPlayDate": get_today_date(), "len": new_len}}
     if fimos_end:
@@ -52,8 +116,8 @@ def update_user(user_id, new_len, fimos_end=None, last_duel_date=None):
     if last_duel_date:
         update_data["$set"]["lastDuelDate"] = last_duel_date
     users.update_one({"userId": user_id}, update_data)
-
-
+    </pre>
+		<h4>Добавление чата пользователю</h4> <pre>
 def add_chat_to_user(user_id, chat_id):
     if chat_id < 0:
         user = get_user(user_id)
@@ -62,18 +126,18 @@ def add_chat_to_user(user_id, chat_id):
         elif chat_id not in user["chats"]:
             user["chats"].append(chat_id)
             users.update_one({"userId": user_id}, {"$set": {"chats": user["chats"]}})
-
-
+    </pre>
+		<h4>Получение топ пользователей по чату</h4> <pre>
 def get_top_users(chat_id, limit=50):
     top_users = list(users.find({}).sort("len", pymongo.DESCENDING).limit(limit))
     chat_users = [user for user in top_users if "chats" in user and chat_id in user["chats"]]
     return chat_users
-
-
+    </pre>
+		<h4>Глобальный топ пользователей</h4> <pre>
 def get_global_top_users(limit=50):
     return list(users.find().sort("len", pymongo.DESCENDING).limit(limit))
-
-
+    </pre>
+		<h4>Ранг пользователя в чате и глобально</h4> <pre>
 def get_user_rank(user_id, chat_id):
     all_users = list(users.find({}).sort("len", pymongo.DESCENDING))
     chat_users = [user for user in all_users if "chats" in user and chat_id in user["chats"]]
@@ -82,52 +146,63 @@ def get_user_rank(user_id, chat_id):
             return index + 1
     return None
 
-
 def get_global_user_rank(user_id):
     all_users = list(users.find().sort("len", pymongo.DESCENDING))
     for index, user in enumerate(all_users):
         if user["userId"] == user_id:
             return index + 1
     return None
-
-
+    </pre>
+		<h3>3.3. Функции, связанные с "фимозом"</h3>
+		<h4>Проверка фимоза</h4> <pre>
 def is_fimos(user):
     if user is None:
         return False
     return user["fimos_end"] > get_today_date()
-
-
+    </pre>
+		<h4>Дата окончания фимоза</h4> <pre>
 def get_fimos_end_date():
     moscow_tz = pytz.timezone("Europe/Moscow")
     moscow_time = datetime.now(moscow_tz)
     fimos_end = moscow_time + timedelta(days=3)
     return fimos_end.strftime("%Y-%m-%d")
-
-
+    </pre>
+		<h3>3.4. Очистка устаревших запросов дуэлей</h3> <pre>
 async def cleanup_duel_requests():
     now = datetime.now()
-    expired_requests = [req_id for req_id, req_data in DUEL_REQUESTS.items() if (now - req_data["timestamp"]).total_seconds() > DUEL_TIMEOUT]
+    expired_requests = [
+        req_id
+        for req_id, req_data in DUEL_REQUESTS.items()
+        if (now - req_data["timestamp"]).total_seconds() > DUEL_TIMEOUT
+    ]
     for req_id in expired_requests:
         req_data = DUEL_REQUESTS.pop(req_id)
         try:
             duel_user_obj = await bot.get_users(req_data["duel_user_id"])
             user_obj = await bot.get_users(req_data["user_id"])
-            await bot.send_message(req_data["chat_id"], f"❌ Время ожидания дуэли от <a href='tg://user?id={req_data['user_id']}'>{user_obj.first_name}</a> к <a href='tg://user?id={req_data['duel_user_id']}'>{duel_user_obj.first_name}</a> истекло.", disable_notification=True)
+            await bot.send_message(
+                req_data["chat_id"],
+                f"❌ Время ожидания дуэли от <a href='tg://user?id={req_data['user_id']}'>{user_obj.first_name}</a> к <a href='tg://user?id={req_data['duel_user_id']}'>{duel_user_obj.first_name}</a> истекло.",
+                disable_notification=True
+            )
         except Exception:
             pass
-
-
+    </pre>
+		<h3>3.5. Получение пользователей, участвующих в дуэли сегодня</h3> <pre>
 def get_users_duel_today(chat_id):
     all_users = list(users.find({}))
     chat_users = [user for user in all_users if "chats" in user and chat_id in user["chats"] and user["lastDuelDate"] == get_today_date()]
     return chat_users
-
-
+    </pre> </div>
+	<div class="section">
+		<h2>4. Обработчики команд Telegram</h2>
+		<h3>4.1. Команда <code>/id</code> или <code>/айди</code></h3> <pre>
 @bot.on_message(filters.command(["id", "айди"]))
 async def command_handler(client: Client, message: Message):
     await message.reply(message.from_user.id)
-
-
+    </pre>
+		<p> Отправляет Telegram ID пользователя. </p>
+		<h3>4.2. Команда <code>/kok</code> или <code>/кок</code></h3> <pre>
 @bot.on_message(filters.command(["kok", "кок"]))
 async def command_handler(client: Client, message: Message):
     user_id = message.from_user.id
@@ -185,8 +260,8 @@ async def command_handler(client: Client, message: Message):
             await message.reply(f"🍆 Твой кок уменьшился на <b>{abs(change)}</b> см и теперь составляет <b>{new_len}</b> см.{fimos_message}")
         elif fimos:
             await message.reply(f"🍆 Твой кок теперь составляет <b>{new_len}</b> см.{fimos_message}")
-
-
+    </pre>
+		<h3>4.3. Команда <code>/top</code> или <code>/топ</code></h3> <pre>
 @bot.on_message(filters.command(["top", "топ"]))
 async def top_handler(client: Client, message: Message):
     chat_id = message.chat.id
@@ -199,9 +274,9 @@ async def top_handler(client: Client, message: Message):
     if not top_users:
         await message.reply("🤷‍♂️ В этом чате еще никто не играл.")
         return
-
+    
     duel_users_today = get_users_duel_today(chat_id)
-
+    
     top_text = "🏆 <b>Топ коков в этом чате:</b>\n"
     for i, user in enumerate(top_users):
         user_obj = await client.get_users(user["userId"])
@@ -213,8 +288,8 @@ async def top_handler(client: Client, message: Message):
         top_text += f"\n🏅 Твоя позиция в топе: <b>{user_rank}</b>"
 
     await message.reply(top_text)
-
-
+    </pre>
+		<h3>4.4. Команда <code>/top_global</code> или <code>/топ_глобальный</code></h3> <pre>
 @bot.on_message(filters.command(["top_global", "топ_глобальный"]))
 async def global_top_handler(client: Client, message: Message):
     top_users = get_global_top_users()
@@ -230,8 +305,8 @@ async def global_top_handler(client: Client, message: Message):
     if user_rank:
         top_text += f"\n🏅 Твоя позиция в глобальном топе: <b>{user_rank}</b>"
     await message.reply(top_text)
-
-
+    </pre>
+		<h3>4.5. Команда <code>/help</code> или <code>/помощь</code></h3> <pre>
 @bot.on_message(filters.command(["help", "помощь"]))
 async def help_handler(client: Client, message: Message):
     help_text = f"""
@@ -259,8 +334,8 @@ async def help_handler(client: Client, message: Message):
 <a href="https://github.com/Mvory9/kok-userbot-tg/issues">Сообщить о баге или предложить идею</a>
 """
     await message.reply(help_text, disable_web_page_preview=True)
-
-
+    </pre>
+		<h3>4.6. Команда <code>/duel</code> или <code>/дуэль</code></h3> <pre>
 @bot.on_message(filters.command(["duel", "дуэль"]))
 async def duel_handler(client: Client, message: Message):
     user_id = message.from_user.id
@@ -273,15 +348,17 @@ async def duel_handler(client: Client, message: Message):
     if user["lastDuelDate"] == get_today_date():
         await message.reply("⚔️ Ты уже дрался сегодня, приходи завтра.")
         return
-
+    
     if user["len"] < 50:
         await message.reply("⚔️ Ты еще слишком мал для дуэлей. Твой кок должен быть больше 50 см.")
         return
 
     if not message.reply_to_message and not message.command[1:]:
-        await message.reply("⚔️ Пожалуйста, ответьте на сообщение пользователя, которого хотите вызвать на дуэль, или укажите его юзернейм/ID")
+        await message.reply(
+            "⚔️ Пожалуйста, ответьте на сообщение пользователя, которого хотите вызвать на дуэль, или укажите его юзернейм/ID"
+        )
         return
-
+    
     duel_user_id = None
     if message.reply_to_message:
         duel_user_id = message.reply_to_message.from_user.id
@@ -298,7 +375,7 @@ async def duel_handler(client: Client, message: Message):
     if user_id == duel_user_id:
         await message.reply("🤨 Ты не можешь вызвать себя на дуэль.")
         return
-
+        
     if message.reply_to_message and message.chat.id != message.reply_to_message.chat.id:
         await message.reply("🤨 Дуэли возможны только в одном чате")
         return
@@ -311,7 +388,7 @@ async def duel_handler(client: Client, message: Message):
     if is_fimos(duel_user):
         await message.reply("😔 Этот пользователь не может участвовать в дуэлях, у него фимоз.")
         return
-
+        
     if duel_user["len"] < 50:
         await message.reply("⚔️ Этот пользователь еще слишком мал для дуэлей. Его кок должен быть больше 50 см.")
         return
@@ -319,11 +396,11 @@ async def duel_handler(client: Client, message: Message):
     if user["lastPlayDate"] != get_today_date() or duel_user["lastPlayDate"] != get_today_date():
         await message.reply("⏰ Ты или твой соперник не играли сегодня, вы не можете драться.")
         return
-
+    
     if duel_user["lastDuelDate"] == get_today_date():
-        duel_user_obj = await client.get_users(duel_user_id)
-        await message.reply(f"⚔️ {duel_user_obj.first_name} уже дрался сегодня, приходи завтра.")
-        return
+         duel_user_obj = await client.get_users(duel_user_id)
+         await message.reply(f"⚔️ {duel_user_obj.first_name} уже дрался сегодня, приходи завтра.")
+         return
 
     for req_id, req_data in DUEL_REQUESTS.items():
         if req_data["duel_user_id"] == duel_user_id:
@@ -340,23 +417,23 @@ async def duel_handler(client: Client, message: Message):
     }
     duel_user_obj = await client.get_users(duel_user_id)
     await message.reply(f"⚔️ {duel_user_obj.first_name}, Вас вызвали на дуэль! Используйте <code>/accept_duel</code> или <code>/decline_duel</code> для принятия или отклонения дуэли.")
-
-
+    </pre>
+		<h3>4.7. Команда <code>/accept_duel</code></h3> <pre>
 @bot.on_message(filters.command(["accept_duel"]))
 async def accept_duel_handler(client: Client, message: Message):
     user_id = message.from_user.id
-
+    
     await cleanup_duel_requests()
-
+    
     request_id = None
     for req_id, req_data in DUEL_REQUESTS.items():
         if req_data["duel_user_id"] == user_id:
-            request_id = req_id
-            break
-
+          request_id = req_id
+          break
+    
     if not request_id:
-        await message.reply("❌ Нет активных запросов на дуэль для Вас или запрос устарел.")
-        return
+      await message.reply("❌ Нет активных запросов на дуэль для Вас или запрос устарел.")
+      return
 
     request_data = DUEL_REQUESTS[request_id]
     user_id = request_data["user_id"]
@@ -364,17 +441,17 @@ async def accept_duel_handler(client: Client, message: Message):
 
     user = get_user(user_id)
     duel_user = get_user(duel_user_id)
-
+    
     if is_fimos(user) or is_fimos(duel_user):
         await message.reply("Один из Вас имеет фимоз, дуэль невозможна.")
         del DUEL_REQUESTS[request_id]
         return
-
+    
     if user["lastDuelDate"] == get_today_date() or duel_user["lastDuelDate"] == get_today_date():
         await message.reply("Один из Вас уже дрался сегодня, дуэль невозможна.")
         del DUEL_REQUESTS[request_id]
         return
-
+    
     duel_change = 15
     user_change = -10
 
@@ -390,33 +467,37 @@ async def accept_duel_handler(client: Client, message: Message):
     user_obj = await client.get_users(user_id)
     duel_user_obj = await client.get_users(duel_user_id)
 
-    await message.reply(f"⚔️ Дуэль между {user_obj.first_name} и {duel_user_obj.first_name}!\n\n" f"💪 {user_obj.first_name} {'потерял' if user_change < 0 else 'получил'} {abs(user_change)} см. Теперь его кок: {new_len_user} см.\n" f"💪 {duel_user_obj.first_name} {'потерял' if duel_change < 0 else 'получил'} {abs(duel_change)} см. Теперь его кок: {new_len_duel} см.")
+    await message.reply(
+        f"⚔️ Дуэль между {user_obj.first_name} и {duel_user_obj.first_name}!\n\n"
+        f"💪 {user_obj.first_name} {'потерял' if user_change < 0 else 'получил'} {abs(user_change)} см. Теперь его кок: {new_len_user} см.\n"
+        f"💪 {duel_user_obj.first_name} {'потерял' if duel_change < 0 else 'получил'} {abs(duel_change)} см. Теперь его кок: {new_len_duel} см."
+    )
     del DUEL_REQUESTS[request_id]
-
-
+    </pre>
+		<h3>4.8. Команда <code>/decline_duel</code></h3> <pre>
 @bot.on_message(filters.command(["decline_duel"]))
 async def decline_duel_handler(client: Client, message: Message):
     user_id = message.from_user.id
-
+    
     await cleanup_duel_requests()
-
+    
     request_id = None
     for req_id, req_data in DUEL_REQUESTS.items():
-        if req_data["duel_user_id"] == user_id:
-            request_id = req_id
-            break
+      if req_data["duel_user_id"] == user_id:
+        request_id = req_id
+        break
 
     if not request_id:
         await message.reply("❌ Нет активных запросов на дуэль для Вас или запрос устарел.")
         return
-
+        
     request_data = DUEL_REQUESTS[request_id]
     user_obj = await client.get_users(request_data["user_id"])
-
+    
     await message.reply(f"❌ {user_obj.first_name} отклонил вызов на дуэль.")
     del DUEL_REQUESTS[request_id]
-
-
+    </pre>
+		<h3>4.9. Команда <code>/profile</code> или <code>/профиль</code></h3> <pre>
 @bot.on_message(filters.command(["profile", "профиль"]))
 async def profile_handler(client: Client, message: Message):
     user_id = message.from_user.id
@@ -431,15 +512,60 @@ async def profile_handler(client: Client, message: Message):
     if fimos:
         fimos_message = f"\n⚠️ У Вас фимоз до: {user['fimos_end']}"
 
-    await message.reply(f"📊 <b>Ваш профиль:</b>\n\n" f"📏 Длина вашего кока: <b>{user['len']}</b> см\n" f"📅 Дата последней игры: <b>{user['lastPlayDate']}</b>\n" f"⚔️ Дата последней дуэли: <b>{user['lastDuelDate']}</b>{fimos_message}")
+    await message.reply(f"📊 <b>Ваш профиль:</b>\n\n" 
+                        f"📏 Длина вашего кока: <b>{user['len']}</b> см\n"
+                        f"📅 Дата последней игры: <b>{user['lastPlayDate']}</b>\n"
+                        f"⚔️ Дата последней дуэли: <b>{user['lastDuelDate']}</b>{fimos_message}")
+    </pre> </div>
+	<div class="section">
+		<h2>5. Обработчик миграции данных <code>/migrate</code></h2> <pre>
+@bot.on_message(filters.command(["migrate"]))
+async def migrate_handler(client: Client, message: Message):
+    # new_db и new_users – объекты новой базы данных. Укажите корректное имя базы.
+    new_db = client.new_database  # Замените 'new_database' на название вашей новой базы
+    new_users = new_db.users
 
+    migrated_count = 0
+    for old_user in users.find({}):
+        new_user = {
+            "userId": int(old_user["userId"]),
+            "lastPlayDate": old_user.get("lastPlayDate", "1970-01-01"),
+            "len": old_user["len"],
+            "chats": old_user.get("chats", []),
+            "fimos_end": old_user.get("fimos_end", "1970-01-01"),
+            "lastDuelDate": old_user.get("lastDuelDate", "1970-01-01"),
+        }
+        new_users.update_one({"userId": new_user["userId"]}, {"$set": new_user}, upsert=True)
+        migrated_count += 1
 
+    await message.reply(f"✅ Миграция завершена. Перенесено пользователей: {migrated_count}.")
+    </pre>
+		<p> Обработчик перебирает все записи из старой коллекции и сохраняет их в новой базе, добавляя недостающие поля (со значениями по умолчанию, аналогичными регистрации). </p>
+	</div>
+	<div class="section">
+		<h2>6. Фоновая задача</h2> <pre>
 async def main():
     while True:
         await asyncio.sleep(10)
         await cleanup_duel_requests()
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     bot.loop.create_task(main())
     bot.run()
+    </pre>
+		<p> Фоновая задача каждые 10 секунд вызывает функцию очистки устаревших запросов дуэлей. </p>
+	</div>
+	<div class="section">
+		<h2>Заключение</h2>
+		<p> В этой документации описаны: </p>
+		<ul>
+			<li>Инициализация бота и подключение к MongoDB.</li>
+			<li>Утилитарные функции для работы с датами, пользователями, рейтингами, состоянием "фимоза".</li>
+			<li>Обработчики команд Telegram (игровые команды, рейтинги, дуэли, профиль).</li>
+			<li>Обработчик миграции данных из старой базы в новую с сохранением всех обязательных полей.</li>
+			<li>Фоновая задача для регулярной очистки устаревших запросов дуэлей.</li>
+		</ul>
+	</div>
+</body>
+
+</html>
