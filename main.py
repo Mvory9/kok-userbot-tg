@@ -38,7 +38,7 @@ def get_user(user_id):
     return users.find_one({"userId": user_id})
 
 
-def register_user(user_id):
+def register_user(user_id, first_name=None):
     find_user_len_in_oldBase = find_user_by_id(user_id)
 
     post = {}
@@ -51,8 +51,9 @@ def register_user(user_id):
             "chats": [],
             "fimos_end": "1970-01-01",
             "lastDuelDate": "1970-01-01",
+            "first_name": first_name,
         }
-
+    
     else:
         post = {
             "userId": user_id,
@@ -61,17 +62,20 @@ def register_user(user_id):
             "chats": [],
             "fimos_end": "1970-01-01",
             "lastDuelDate": "1970-01-01",
+            "first_name": first_name,
         }
 
     users.insert_one(post)
 
 
-def update_user(user_id, new_len, fimos_end=None, last_duel_date=None):
+def update_user(user_id, new_len, fimos_end=None, last_duel_date=None, first_name=None):
     update_data = {"$set": {"lastPlayDate": get_today_date(), "len": new_len}}
     if fimos_end:
         update_data["$set"]["fimos_end"] = fimos_end
     if last_duel_date:
         update_data["$set"]["lastDuelDate"] = last_duel_date
+    if first_name:
+        update_data["$set"]["first_name"] = first_name
     users.update_one({"userId": user_id}, update_data)
 
 
@@ -156,10 +160,13 @@ async def command_handler(client: Client, message: Message):
     user = get_user(user_id)
 
     if user is None:
-        register_user(user_id)
+        register_user(user_id, first_name=message.from_user.first_name)
         user = get_user(user_id)
 
     add_chat_to_user(user_id, chat_id)
+
+    if user.get("first_name") != message.from_user.first_name:
+        update_user(user_id, user["len"], first_name=message.from_user.first_name)
 
     if user["lastPlayDate"] == get_today_date():
         await message.reply(f"⏰ Ты уже играл сегодня. Твой кок: <b>{user['len']}</b> см")
@@ -224,10 +231,21 @@ async def top_handler(client: Client, message: Message):
     duel_users_today = get_users_duel_today(chat_id)
 
     top_text = "🏆 <b>Топ коков в этом чате:</b>\n"
+
     for i, user in enumerate(top_users):
-        user_obj = await client.get_users(user["userId"])
+        user_id = int(user["userId"])
+        user_name = user.get("first_name", f"ID: {user_id}")
+
+        if user_name.startswith("ID:"):
+            try:
+                chat_member = await client.get_chat_member(chat_id, user_id)
+                user_name = chat_member.user.first_name
+                update_user(user_id, user["len"], first_name=user_name)
+            except Exception:
+                pass
+
         duel_mark = " ⚔️" if user in duel_users_today else ""
-        top_text += f"<b>{i + 1}.</b> {user_obj.first_name} - <b>{user['len']}</b> см{duel_mark}\n"
+        top_text += f"<b>{i + 1}.</b> {user_name} - <b>{user['len']}</b> см{duel_mark}\n"
 
     user_rank = get_user_rank(message.from_user.id, chat_id)
     if user_rank:
