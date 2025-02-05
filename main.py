@@ -201,11 +201,11 @@ async def command_handler(client: Client, message: Message):
         update_user(user_id, new_len, fimos_end)
 
         if change > 0 and not fimos:
-            await message.reply(f"{PREMIUM_EMOJI["eggplant"]} Твой кок вырос на <b>{change}</b> см и теперь составляет <b>{new_len}</b> см.{fimos_message}")
+            await message.reply(f"{PREMIUM_EMOJI['eggplant']} Твой кок вырос на <b>{change}</b> см и теперь составляет <b>{new_len}</b> см.{fimos_message}")
         elif change < 0 and not fimos:
-            await message.reply(f"{PREMIUM_EMOJI["eggplant"]} Твой кок уменьшился на <b>{abs(change)}</b> см и теперь составляет <b>{new_len}</b> см.{fimos_message}")
+            await message.reply(f"{PREMIUM_EMOJI['eggplant']} Твой кок уменьшился на <b>{abs(change)}</b> см и теперь составляет <b>{new_len}</b> см.{fimos_message}")
         elif fimos:
-            await message.reply(f"{PREMIUM_EMOJI["eggplant"]} Твой кок теперь составляет <b>{new_len}</b> см.{fimos_message}")
+            await message.reply(f"{PREMIUM_EMOJI['eggplant']} Твой кок теперь составляет <b>{new_len}</b> см.{fimos_message}")
 
 
 @bot.on_message(filters.command(["top", "топ"]))
@@ -258,7 +258,7 @@ async def help_handler(client: Client, message: Message):
     help_text = f"""
 <b>Список доступных команд:</b>
 
-{PREMIUM_EMOJI["eggplant"]} <code>/kok</code> (или <code>/кок</code>) - Играть в кок. Увеличивает длину вашего кока на случайное число. Можно играть один раз в день.
+{PREMIUM_EMOJI['eggplant']} <code>/kok</code> (или <code>/кок</code>) - Играть в кок. Увеличивает длину вашего кока на случайное число. Можно играть один раз в день.
 
 🏆 <code>/top</code> (или <code>/топ</code>) - Показывает топ коков в текущем чате и вашу позицию.
 
